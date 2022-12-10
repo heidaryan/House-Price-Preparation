@@ -1,0 +1,696 @@
+---
+title: "House price"
+author: "ForozanHeidaryan"
+date: "2022-12-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+This data set is about the sale price of buildings in the city of Ame Iva which has been 
+Collected by statistics named Dean de cock 
+
+# Understanding the Business Question
+
+Price Recommendation for  house
+Data inspection
+
+# Dataset Description
+## File descriptions
+
+
+data_description.txt - full description of each column, originally prepared by Dean De Cock
+
+but lightly edited to match the column names used here
+
+sample_submission.csv - a benchmark submission from a linear regression on year and month of 
+sale, lot square footage, and number of bedrooms
+
+Data fields
+
+Here's a brief version of what you'll find in the data description file.
+
+SalePrice :   the property's sale price in dollars. This is the target variable that you're 
+
+trying to predict.
+
+MSSubClass:   The building class
+
+MSZoning:     The general zoning classification
+
+LotFrontage:  Linear feet of street connected to property
+
+LotArea:      Lot size in square feet
+
+Street:       Type of road access
+
+Alley:        Type of alley access
+
+LotShape:     General shape of property
+
+LandContour:  Flatness of the property
+
+Utilities:    Type of utilities available
+
+LotConfig:    Lot configuration
+
+LandSlope:    Slope of property
+
+Neighborhood: Physical locations within Ames city limits
+
+Condition1:   Proximity to main road or railroad
+
+Condition2:   Proximity to main road or railroad (if a second is present)
+
+BldgType:     Type of dwelling
+
+HouseStyle:   Style of dwelling
+
+OverallQual:  Overall material and finish quality
+
+OverallCond:  Overall condition rating
+
+YearBuilt:    Original construction date
+
+YearRemodAdd: Remodel date
+
+RoofStyle:    Type of roof
+
+RoofMatl:     Roof material
+Exterior1st:  Exterior covering on house
+
+Exterior2nd:  Exterior covering on house (if more than one material)
+
+MasVnrType:   Masonry veneer type
+
+MasVnrArea:   Masonry veneer area in square feet
+
+ExterQual:    Exterior material quality
+
+ExterCond:    Present condition of the material on the exterior
+
+Foundation:   Type of foundation
+
+BsmtQual:     Height of the basement
+
+BsmtCond:     General condition of the basement
+
+BsmtExposure: Walkout or garden level basement walls
+
+BsmtFinType1: Quality of basement finished area
+
+BsmtFinSF1:   Type 1 finished square feet
+
+BsmtFinType2: Quality of second finished area (if present)
+
+BsmtFinSF2:   Type 2 finished square feet
+
+BsmtUnfSF:    Unfinished square feet of basement area
+
+TotalBsmtSF:  Total square feet of basement area
+
+Heating:      Type of heating
+
+HeatingQC:    Heating quality and condition
+
+CentralAir:   Central air conditioning
+
+Electrical:   Electrical system
+
+1stFlrSF:     First Floor square feet
+
+2ndFlrSF:     Second floor square feet
+
+LowQualFinSF: Low quality finished square feet (all floors)
+
+GrLivArea:    Above grade (ground) living area square feet
+
+BsmtFullBath: Basement full bathrooms
+
+BsmtHalfBath: Basement half bathrooms
+
+FullBath:     Full bathrooms above grade
+
+HalfBath:     Half baths above grade
+
+Bedroom:      Number of bedrooms above basement level
+
+Kitchen:      Number of kitchens
+
+KitchenQual:  Kitchen quality
+
+TotRmsAbvGrd: Total rooms above grade (does not include bathrooms)
+
+Functional:   Home functionality rating
+
+Fireplaces:   Number of fireplaces
+
+FireplaceQu:  Fireplace quality
+
+GarageType:   Garage location
+
+GarageYrBlt:  Year garage was built
+
+GarageFinish: Interior finish of the garage
+
+GarageCars:   Size of garage in car capacity
+
+GarageArea:   Size of garage in square feet
+
+GarageQual:   Garage quality
+
+GarageCond:   Garage condition
+
+PavedDrive:   Paved driveway
+
+WoodDeckSF:   Wood deck area in square feet
+
+OpenPorchSF:  Open porch area in square feet
+
+EnclosedPorch:Enclosed porch area in square feet
+
+3SsnPorch:    Three season porch area in square feet
+
+ScreenPorch:  Screen porch area in square feet
+
+PoolArea:     Pool area in square feet
+
+PoolQC:       Pool quality
+
+Fence:        Fence quality
+
+MiscFeature:  Miscellaneous feature not covered in other categories
+
+MiscVal:      $Value of miscellaneous feature
+
+MoSold:       Month Sold
+
+YrSold:       Year Sold
+
+SaleType:     Type of sale
+
+SaleCondition:Condition of sale
+
+### read data from file 
+```{r}
+data <- read.csv("train.csv" , header = TRUE )
+```
+
+summary of the data
+
+```{r}
+dim(data)
+length(unique(data$Id))
+summary(data)
+```
+
+Convert categorical variables to factor
+
+```{r}
+cat_var <- c("MSZoning" , "Street" , "Alley" ,"LotShape" , "LandContour", "Utilities" , "LotConfig" , "LandSlope" ,
+             "Neighborhood" , "Condition1" , "Condition2" , "BldgType" ,
+             "HouseStyle", "OverallQual", "OverallCond" , "RoofStyle" , "Exterior1st" , "Exterior2nd" , "MasVnrType",
+             "ExterQual" ,"ExterCond" , "Foundation" , "BsmtQual" ,"BsmtCond" ,
+             "BsmtExposure" ,"BsmtFinType1" ,"BsmtFinType2" , "Heating" , "HeatingQC" , "CentralAir" , "Electrical" , 
+             "KitchenQual" , "Functional" , "Fireplaces" , "FireplaceQu" ,
+             "GarageType" , "GarageFinish" , "GarageCars" , "GarageQual" ,"GarageCond" , "PavedDrive" , "PoolQC", 
+             "Fence","RoofMatl" , 
+             "MiscFeature" , "SaleType" , "SaleCondition")
+```
+
+```{r}
+data[,cat_var]  <-  lapply(data[,cat_var] , factor)
+knitr::kable(summary(data)) 
+knitr::kable(str(data))
+```
+
+Identification missing values
+
+```{r}
+mv_summary2        <-  data.frame('variables name' = colnames(data))
+mv_summary2$freq   <- apply(data , 2 , function(x)  sum(is.na(x)))
+mv_summary2$pers   <- round(mv_summary2$freq / nrow(data) , 3) * 100
+mv_summary2_1      <- as.data.frame(mv_summary2[mv_summary2$pers > 0 & mv_summary2$pers <10, ])
+mv_summary2_2      <- as.data.frame(mv_summary2[mv_summary2$pers > 10 , ])
+knitr::kable(mv_summary2_1)
+knitr::kable(mv_summary2_2)
+```
+
+Removing columns that have more than 10% missing value
+In my opinion, these columns have high missing values and cause problems in over modelling
+
+```{r}
+t1 <- data[,c("LotFrontage","Alley","FireplaceQu" ,"Fence" , 
+                "MiscFeature" , "PoolQC")]
+```
+
+
+```{r}
+data1 <- data[,-which(data %in% t1)]
+dim(data1)
+```
+
+I also removed all rows that contained missing values. this is the  easiest category to get rid of missing values
+
+```{r}
+data2 <- data1[apply(data1,1,function(x) any(is.na(x))) == F,]
+
+```
+
+For convenience, I divided the data into continuous and discrete parts
+
+```{r}
+cat <- data2[,c("MSZoning" , "Street" ,"LotShape" , "LandContour", "Utilities" , "LotConfig" , "LandSlope" ,
+                 "Neighborhood" , "Condition1" , "Condition2" , "BldgType" ,
+                 "HouseStyle", "OverallQual", "OverallCond" , "RoofStyle" , "Exterior1st" , "Exterior2nd" , 
+                 "MasVnrType"    ,
+                 "ExterQual" ,"ExterCond" , "Foundation" , "BsmtQual" ,"BsmtCond" ,
+                 "BsmtExposure" ,"BsmtFinType1" ,"BsmtFinType2" , "Heating" , "HeatingQC" , "CentralAir" ,
+                 "Electrical"  , 
+                 "KitchenQual" , "Functional" , "GarageType" , "GarageFinish" , "GarageCars" , "GarageQual" ,
+                 "GarageCond" , "PavedDrive" , 
+                 "RoofMatl" , 
+                 "SaleType" , "SaleCondition" ,"Fireplaces" )]
+```
+
+I prefer to convert the columns that contain the date field to age, this helps me more easily determine the relationship between the price and the life of the house.
+
+```{r}
+
+data3 <- data2[,-c(18,19,57,72)]
+today <- as.Date("2022"  , format = "%Y")
+```
+
+```{r}
+data3$ageBuilt <- as.Date(as.character(data2$YearBuilt) , format = "%Y")
+
+data3$ageBuilt   <- as.numeric(today - data3$ageBuilt)
+
+data3$ageBuilt<- round(data3$ageBuilt/365 )
+summary(data$ageBuilt)
+
+data3$ageRemodAdd  <- as.Date(as.character(data2$YearRemodAdd), format = "%Y")
+
+data3$ageRemodAdd <- as.numeric(today - data3$ageRemodAdd)
+
+data3$ageRemodAdd <- round(data3$ageRemodAdd / 365 )
+
+summary(data3$ageRemodAdd)
+
+data3$GarageageBlt   <- as.Date(as.character(data2$GarageYrBlt),format = "%Y")
+data3$GarageageBlt   <- as.numeric(today - data3$GarageageBlt)
+data3$GarageageBlt   <-round(data3$GarageageBlt / 365 )
+
+summary(data3$GarageageBlt)
+#Regarding the sale date, it also helps me to better recognize the rise and fall of prices
+data3$ageSold  <- as.Date(as.character(data2$YrSold) , format = "%Y")
+data3$ageSold  <- as.numeric(today - data3$ageSold)
+data3$ageSold  <- round(data3$ageSold / 365 )
+summary(data3$ageSold)
+```
+
+Examining the distribution of the response variable
+
+```{r}
+par(mfrow = c(1,1))
+hist(data$SalePrice , breaks = 50,probability = TRUE , col = "#4B0082")
+lines(density(data$SalePrice) , col = "red")
+```
+
+```{r}
+qqnorm(data$SalePrice , col = "#4B0082")
+qqline(data$SalePrice , col = "red")
+```
+
+```{r}
+par(mfrow = c(1,1))
+boxplot(data$SalePrice)
+```
+
+```{r}
+library("moments")
+
+jarque.test(data$SalePrice)
+#pvalue < 0   -> h0 regect
+```
+
+Graphs and statical tests indicate  that the response variable does not  follow 
+A normal distribution  which is quite  reasonable for house prices
+
+
+I would like to make the response variable as close to a normal distribution 
+As possible this may help me in the modelling  for this I use the box cox transformation
+```{r}
+
+library("MASS")
+box_result <- boxcox(data$SalePrice ~ 1 , lambda = seq(-5 , 5 , 0.1))
+box_result <- data.frame(box_result)
+lambda <- box_result[which(box_result$y == max(box_result$y)),] 
+#It observes that zero is inside the confidence interval, so I use logarithm variable change 
+data3$SalePrice <- log(data3$SalePrice)
+```
+It is clear that zero is inside this confidence interval
+Therefore, I use logarithmic transformation
+
+```{r}
+hist(data3$SalePrice , breaks = 50 , probability = TRUE , col = "#4B0082")
+lines(density(data3$SalePrice) , col = "red")
+```
+
+```{r}
+qqnorm(data3$SalePrice , col = "#4B0082")
+qqline(data3$SalePrice , col = "red")
+```
+
+```{r}
+jarque.test(data3$SalePrice)
+```
+
+```{r}
+anscombe.test(data3$SalePrice)
+```
+
+```{r}
+par(mfrow = c(1,1))
+boxplot(data3$SalePrice ,main = "plot respont", col = "#4B0082")
+```
+It seems that the data is far from the normal distribution
+
+```{r}
+tukey_u <- quantile(data3$SalePrice , probs = 0.75) + 1.5 * IQR(data3$SalePrice)
+
+sum(data3$SalePrice > tukey_u)
+```
+For convenience, I divided the data into continuous and discrete parts
+
+```{r}
+count <- data3[,-which(data3 %in% cat)]
+cunt1 <- count[,c(1:17)]
+cunt2 <- count[,c(18:29)]
+
+cunt1 <- cunt1[,-1]
+cunt1$SalePrice  <- cunt2$SalePrice
+```
+
+Histograms relate to continuous variables
+```{r}
+par(mar = c(2,2,2,2))
+par(mfrow = c(4,4))
+for (i in 1:16 ) {
+  hist(cunt1[,i] , xlab =   "" ,col = "#4B0082", main = paste("HIST COUNT 1" ,
+                                                              names(cunt1[i])))
+}
+```
+
+```{r}
+par(mar = c(2,2,2,2))
+par(mfrow = c(4,4))
+for (i in 1:11) {
+  hist(cunt2[,i] , xlab = "" , col = "#4B0082" , main = paste("HIST COUNT 2" , 
+                                                              names(cunt1[i])))
+}
+```
+
+Correlation of continuous variables versus response variable  
+
+```{r}
+cros_tab <- round(cor(count),2)
+
+library("corrplot")
+par(mfrow = c(1,1))
+corrplot(cros_tab)
+```
+
+```{r}
+par(mar=c(2,2,2,2))
+par(mfrow = c(4,4))
+for (i in 1:16) {
+  plot(cunt1[,i] , cunt2$SalePrice,xlab = "" , main = paste("plot" ,names(cunt1)[i] ))
+}
+```
+
+```{r}
+par(mar=c(2,2,2,2))
+par(mfrow = c(4,4))
+for (i in 1:11) {
+  plot(cunt2[,i] , cunt2$SalePrice,xlab = "" , main = paste("plot" ,names(cunt2)[i] ))
+}
+```
+
+We go  to the distribution of discrete variables
+
+```{r}
+categori <- data3[,which( data3 %in% cat)]
+colnames(categori)
+dim(categori)
+```
+
+Examining the distribution of discrete variables
+
+
+It is observed that  residential low-density and residential following villages have the highest average price, of course, it is obvious that these two types have a higher frequency than the other 
+```{r}
+table(data3$MSZoning)
+boxplot(SalePrice ~ MSZoning , data = data3 , col = "#4B0082" , border = "#7E3817")
+
+```
+   
+   It is observed that  residential low-density and residential following villages have the highest average price, of course, it is obvious that these two types have a higher frequency than the other 
+   
+```{r}
+table(data3$Street)
+boxplot(SalePrice ~  Street , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Buildings that are  located on paved streets have a higher 	average price,although according to the table it is evident that they are mor expensive than other type, so no decision  can be made about this
+
+```{r}
+table(data3$LotShape)
+boxplot(SalePrice ~ LotShape , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+if the shape of the building more regular, it will have higher average 
+
+```{r}
+table(data3$LandContour)
+boxplot(SalePrice ~ LandContour , data = data3 , col = "#4B0082" , border = "#7E3817") 
+```
+
+buildings that are higer than the grouand level ( compared to the street  ) they supposed  to have higher average price 
+
+```{r}
+table(data3$Utilities)
+boxplot(SalePrice ~  Utilities , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+I cant make any decisions  about this because  I only have one sample of the nosewat type _ I’ll probablity drop this variable altogether because it cant be a good explanation  
+
+```{r}
+table(data3$LotConfig)
+boxplot(SalePrice ~  LotConfig , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+this variable vague for me, may be I will  catch some thing in the moddeling process. Ather wise I’ll delete irt
+
+```{r}
+table(data3$LandSlope)
+boxplot(SalePrice ~  LandSlope , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+ the avrage of the variable is close to each other, and it seems that the presence of outlier variable in the gentle slope is due to the high frequency of this type, according  to observing image of Ames, we found that this city is flat - in the case of colinearity I will delete it 
+
+```{r}
+table(data3$Neighborhood)
+boxplot(SalePrice ~ Neighborhood , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+```{r}
+table(data3$Condition1)
+boxplot(SalePrice ~ Condition1 , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+most of the building are in normal location. In the case of(arteria street) I suspect that the noise of the cars is involved in lowering the price 
+
+```{r}
+table(data3$Condition2)
+boxplot(SalePrice ~ Condition2 , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+ conditions1 and 2 are very similar and I have the same opinion about these two conditions
+
+```{r}
+table(data3$BldgType)
+boxplot(SalePrice ~ BldgType , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+single_family detached house and town houses inside units have a higher average price than others.and the houses that have been converted for these two families_ have the 
+Lowest  price
+
+```{r}
+table(data3$HouseStyle)
+boxplot(SalePrice ~ HouseStyle , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+house style raises all issues related to the high square footage and floors of the average house price 
+```{r}
+table(data3$OverallQual)
+boxplot(SalePrice ~ OverallQual , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the overall quality of the building raises the average price and standard deviation 
+
+```{r}
+table(data3$OverallCond)
+boxplot(SalePrice ~ OverallCond , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+of course the better the overall condition of the house, the higher the average price should be, but what is evident here is that houses with the average condition have a higher average price, maybe it is because of the abundance of this group
+```{r}
+table(data3$RoofStyle)
+boxplot(SalePrice ~ RoofStyle , data = data3 , col = "#4B0082"  , border = "#7E3817")
+```
+ the average is close to each other 
+
+```{r}
+table(data3$RoofMatl)
+boxplot(SalePrice ~  RoofMatl , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+almost all types of standard (composite) single has been formed. I don’t this variable is a good explanation think
+```{r}
+table(data3$Exterior1st)
+boxplot(SalePrice ~ Exterior1st , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Houses covered with  stone and concrete have a relatively higher average price than house covered with wood 
+
+```{r}
+table(data3$Exterior2nd)
+boxplot(SalePrice ~ Exterior2nd , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Vinyl siding covers most of the house, the rest of the covers are around this average 
+```{r}
+table(data3$MasVnrType)
+boxplot(SalePrice ~ MasVnrType , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+stone cladding has the highest average price and brick common has the lowest price 
+
+```{r}
+table(data3$ExterQual)
+boxplot(SalePrice ~ ExterQual ,data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the excellent quality of the material, for the exterior of the building, has the highest average price, and the lower the quality of the materials, the lower the average price
+
+```{r}
+table(data3$ExterCond)
+boxplot(SalePrice ~ ExterCond , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+The variabels distribution is almost similar to the extent qual 
+```{r}
+table(data3$Foundation)
+boxplot(SalePrice ~ Foundation , data = data3 , col = "#4B0082" , border = "#7E3817") 
+```
+poured concrete and finder block from the most frequent and also have the highest average price
+
+```{r}
+table(data3$BsmtQual)
+boxplot(SalePrice ~ BsmtQual , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+ what so ever the height of the basement is high, the average price rise
+```{r}
+table(data3$BsmtCond)
+boxplot(SalePrice ~ BsmtCond , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the overall quality of the basement raises the average price
+```{r}
+table(data3$BsmtExposure)
+boxplot(SalePrice ~ BsmtExposure , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the quality of the pavement be better the average price will raise
+
+```{r}
+table(data3$BsmtFinType1)
+boxplot(SalePrice ~ BsmtFinType1 , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+As the area of the land increases, the average price increases, of course 
+It can be in line with the total area of the building 
+
+```{r}
+table(data3$BsmtFinType2)
+boxplot(SalePrice ~ BsmtFinType2 , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+ the quality of the land has a direct relationship  with the price, but apparently it has formed the majority of the land (probability of multi-collinearity and lack of explicit explanation  )
+ 
+```{r}
+table(data3$Heating)
+boxplot(SalePrice ~ Heating ,data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Houses with gas have the most abundance and the highest price 
+
+```{r}
+table(data3$HeatingQC)
+boxplot(SalePrice ~ HeatingQC , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the quality of heating has a direct relationship with the price 
+
+```{r}
+table(data3$CentralAir)
+boxplot(SalePrice ~ CentralAir ,data = data3 , col = "#4B0082" , border = "#7E3817")
+
+```
+Having central air conditioning has a direct relationship with the average price 
+
+```{r}
+table(data3$Electrical)
+boxplot(SalePrice ~ Electrical , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+ Most houses with SBrkr have a higher average price 
+
+```{r}
+table(data3$KitchenQual)
+boxplot(SalePrice ~ KitchenQual , data = data3, col = "#4B0082" , border = "#7E3817")
+```
+the quality of kitchens has a direct relationship with the price
+
+```{r}
+table(data3$Functional)
+boxplot(SalePrice ~ Functional, data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+this category is vague to me maybe I didn’t comment on it and maybe I catch sight in the modelling process
+```{r}
+table(data3$Fireplaces)
+boxplot(SalePrice ~ Fireplaces , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the number of fireplaces has a direct relationship with the price of the house maybe it is in line with the square footage 
+```{r}
+table(data3$GarageType)
+boxplot(SalePrice ~ GarageType , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Garages inside the house and attached to the house have a higher price and houses with 
+A separate garage and without a garage have a lower average price 
+```{r}
+table(data3$GarageFinish)
+boxplot(SalePrice ~ GarageFinish , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+ complete garages have a higher average price than unfinished garages
+
+```{r}
+table(data3$GarageCars)
+boxplot(SalePrice ~ GarageCars , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the number of garages has a direct relationship with the price but in the case of houses with 4 garages, a price drop is observed
+```{r}
+table(data3$GarageCond)
+boxplot(SalePrice ~ GarageCond , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+paved and equipped sidewalks have a direct relationship with the price 
+
+```{r}
+table(data3$PavedDrive)
+boxplot(SalePrice ~ PavedDrive , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+Normal and conditional sales have the most frequent and average prices and are higher in the sale type, but sales with advance payment and also newly built houses have a higher price 
+```{r}
+table(data3$SaleType)
+boxplot(SalePrice ~ SaleType , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+the average of all prices are close to each other, except partial, which may be due to home renovation
+```{r}
+table(data3$SaleCondition)
+boxplot(SalePrice ~ SaleCondition , data = data3 , col = "#4B0082" , border = "#7E3817")
+```
+
+Go to modelling 
+
